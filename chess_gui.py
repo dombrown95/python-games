@@ -2,6 +2,7 @@ import tkinter as tk
 import chess
 from tkinter import messagebox
 
+# Unicode chess pieces
 UNICODE_PIECES = {
     "r": "♜", "n": "♞", "b": "♝", "q": "♛", "k": "♚", "p": "♟",
     "R": "♖", "N": "♘", "B": "♗", "Q": "♕", "K": "♔", "P": "♙"
@@ -17,14 +18,22 @@ class ChessGUI:
         self.build_board()
 
     def build_board(self):
+        square_size = 4  # Controls the button size
+        font_size = 14   # Smaller font to keep things neat
+
         for row in range(8):
             for col in range(8):
                 square = chess.square(col, 7 - row)
-                b = tk.Button(self.root, width=4, height=2,
-                              font=('Arial', 24),
-                              command=lambda s=square: self.on_click(s))
+                b = tk.Button(
+                    self.root,
+                    width=square_size,
+                    height=square_size,
+                    font=('Arial', font_size),
+                    command=lambda s=square: self.on_click(s)
+                )
                 b.grid(row=row, column=col)
                 self.buttons[square] = b
+
         self.update_board()
 
     def on_click(self, square):
@@ -53,6 +62,7 @@ class ChessGUI:
 
 def run_chess():
     chess_window = tk.Toplevel()
+    chess_window.geometry("400x400")  # Optional: set a fixed size window
     ChessGUI(chess_window)
 
 if __name__ == "__main__":
