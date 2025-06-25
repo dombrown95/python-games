@@ -1,6 +1,6 @@
 import tkinter as tk
 import chess
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import random
 
 SQUARE_SIZE = 60
@@ -12,14 +12,14 @@ UNICODE_PIECES = {
 }
 
 class ChessGUI:
-    def __init__(self, root, vs_computer=False):
+    def __init__(self, root, vs_computer=False, difficulty="easy"):
         self.root = root
         self.root.title("Chess")
         self.board = chess.Board()
         self.selected_square = None
         self.vs_computer = vs_computer
+        self.difficulty = difficulty
 
-        # UI components
         self.turn_label = tk.Label(root, text="White's turn", font=("Arial", 12))
         self.turn_label.pack(pady=5)
 
@@ -45,7 +45,6 @@ class ChessGUI:
                 color = "#EEE" if (row + col) % 2 == 0 else "#999"
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
 
-                # Highlight selected square
                 if self.selected_square == square:
                     self.canvas.create_rectangle(x1, y1, x2, y2, outline="yellow", width=4)
 
@@ -90,12 +89,50 @@ class ChessGUI:
         self.draw_board()
 
     def computer_move(self):
-        if not self.board.is_game_over():
+        if self.board.is_game_over():
+            return
+
+        if self.difficulty == "easy":
             move = random.choice(list(self.board.legal_moves))
+        elif self.difficulty == "medium":
+            move = self.choose_greedy_move()
+        else:
+            move = random.choice(list(self.board.legal_moves))  # Placeholder for hard
+
+        self.board.push(move)
+        self.draw_board()
+
+        if self.board.is_game_over():
+            self.end_game()
+
+    def choose_greedy_move(self):
+        best_score = -999
+        best_move = random.choice(list(self.board.legal_moves))
+        for move in self.board.legal_moves:
             self.board.push(move)
-            self.draw_board()
-            if self.board.is_game_over():
-                self.end_game()
+            score = self.evaluate_board()
+            self.board.pop()
+            if score > best_score:
+                best_score = score
+                best_move = move
+        return best_move
+
+    def evaluate_board(self):
+        piece_values = {
+            chess.PAWN: 1,
+            chess.KNIGHT: 3,
+            chess.BISHOP: 3,
+            chess.ROOK: 5,
+            chess.QUEEN: 9,
+            chess.KING: 0
+        }
+        score = 0
+        for square in chess.SQUARES:
+            piece = self.board.piece_at(square)
+            if piece:
+                value = piece_values.get(piece.piece_type, 0)
+                score += value if piece.color == self.board.turn else -value
+        return score
 
     def end_game(self):
         result = self.board.result()
@@ -105,14 +142,20 @@ class ChessGUI:
 def run_chess():
     game_window = tk.Toplevel()
     game_window.title("Chess")
-    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?", parent=game_window)
-    
-    ChessGUI(game_window, vs_computer)
-
-    # Bring game window to front
     game_window.lift()
     game_window.focus_force()
     game_window.grab_set()
+
+    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?", parent=game_window)
+    difficulty = "easy"
+    if vs_computer:
+        difficulty = simpledialog.askstring(
+            "Difficulty", "Choose difficulty: easy, medium, or hard", parent=game_window
+        )
+        if not difficulty or difficulty.lower() not in ["easy", "medium", "hard"]:
+            difficulty = "easy"
+
+    ChessGUI(game_window, vs_computer, difficulty.lower())
 
 if __name__ == "__main__":
     run_chess()
