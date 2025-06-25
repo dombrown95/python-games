@@ -2,7 +2,10 @@ import tkinter as tk
 import chess
 from tkinter import messagebox
 
-# Unicode chess pieces
+SQUARE_SIZE = 60
+BOARD_SIZE = SQUARE_SIZE * 8
+
+# Unicode piece symbols
 UNICODE_PIECES = {
     "r": "♜", "n": "♞", "b": "♝", "q": "♛", "k": "♚", "p": "♟",
     "R": "♖", "N": "♘", "B": "♗", "Q": "♕", "K": "♔", "P": "♙"
@@ -14,29 +17,40 @@ class ChessGUI:
         self.root.title("Chess")
         self.board = chess.Board()
         self.selected_square = None
-        self.buttons = {}
-        self.build_board()
 
-    def build_board(self):
-        square_size = 4  # Controls the button size
-        font_size = 14   # Smaller font to keep things neat
+        self.canvas = tk.Canvas(root, width=BOARD_SIZE, height=BOARD_SIZE)
+        self.canvas.pack()
+        self.canvas.bind("<Button-1>", self.on_click)
+        self.draw_board()
 
+    def draw_board(self):
+        self.canvas.delete("all")
         for row in range(8):
             for col in range(8):
+                x1 = col * SQUARE_SIZE
+                y1 = row * SQUARE_SIZE
+                x2 = x1 + SQUARE_SIZE
+                y2 = y1 + SQUARE_SIZE
+
+                color = "#EEE" if (row + col) % 2 == 0 else "#999"
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
+
                 square = chess.square(col, 7 - row)
-                b = tk.Button(
-                    self.root,
-                    width=square_size,
-                    height=square_size,
-                    font=('Arial', font_size),
-                    command=lambda s=square: self.on_click(s)
-                )
-                b.grid(row=row, column=col)
-                self.buttons[square] = b
+                piece = self.board.piece_at(square)
+                if piece:
+                    symbol = UNICODE_PIECES[piece.symbol()]
+                    self.canvas.create_text(
+                        x1 + SQUARE_SIZE / 2,
+                        y1 + SQUARE_SIZE / 2,
+                        text=symbol,
+                        font=("Arial", 28)
+                    )
 
-        self.update_board()
+    def on_click(self, event):
+        col = event.x // SQUARE_SIZE
+        row = event.y // SQUARE_SIZE
+        square = chess.square(col, 7 - row)
 
-    def on_click(self, square):
         if self.selected_square is None:
             piece = self.board.piece_at(square)
             if piece and piece.color == self.board.turn:
@@ -46,23 +60,15 @@ class ChessGUI:
             if move in self.board.legal_moves:
                 self.board.push(move)
                 self.selected_square = None
-                self.update_board()
+                self.draw_board()
                 if self.board.is_game_over():
-                    result = self.board.result()
-                    messagebox.showinfo("Game Over", f"Result: {result}")
+                    messagebox.showinfo("Game Over", f"Result: {self.board.result()}")
                     self.root.destroy()
             else:
-                self.selected_square = None
-
-    def update_board(self):
-        for square, button in self.buttons.items():
-            piece = self.board.piece_at(square)
-            symbol = UNICODE_PIECES.get(piece.symbol()) if piece else " "
-            button.config(text=symbol)
+                self.selected_square = None  # Reset on invalid move
 
 def run_chess():
     chess_window = tk.Toplevel()
-    chess_window.geometry("400x400")  # Optional: set a fixed size window
     ChessGUI(chess_window)
 
 if __name__ == "__main__":
