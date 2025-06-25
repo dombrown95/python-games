@@ -23,3 +23,6 @@ def run_magic_8_ball():
 
     answer = tk.StringVar()
     tk.Label(window, textvariable=answer, font=("Arial", 14), wraplength=250).pack(pady=20)
+
+if __name__ == "__main__":
+    run_magic_8_ball()

@@ -54,3 +54,6 @@ class ChessGUI:
 def run_chess():
     chess_window = tk.Toplevel()
     ChessGUI(chess_window)
+
+if __name__ == "__main__":
+    run_chess()
