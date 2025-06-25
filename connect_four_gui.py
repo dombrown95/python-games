@@ -12,7 +12,7 @@ def run_connect_four():
         def __init__(self, root):
             self.root = root
             self.root.title("Connect Four")
-            self.vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?")
+            self.vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?", parent=self.root)
             self.current_player = 0
             self.board = [["" for _ in range(COLUMNS)] for _ in range(ROWS)]
 
@@ -87,5 +87,13 @@ def run_connect_four():
                         break
             return count
 
-    window = tk.Toplevel()
-    ConnectFour(window)
+    game_window = tk.Toplevel()
+    game_window.title("Connect Four")
+    game_window.lift()
+    game_window.focus_force()
+    game_window.grab_set()
+
+    ConnectFour(game_window)
+
+if __name__ == "__main__":
+    run_connect_four()

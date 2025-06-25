@@ -19,9 +19,14 @@ class ChessGUI:
         self.selected_square = None
         self.vs_computer = vs_computer
 
+        # UI components
+        self.turn_label = tk.Label(root, text="White's turn", font=("Arial", 12))
+        self.turn_label.pack(pady=5)
+
         self.canvas = tk.Canvas(root, width=BOARD_SIZE, height=BOARD_SIZE)
         self.canvas.pack()
         self.canvas.bind("<Button-1>", self.on_click)
+
         self.draw_board()
 
         if self.vs_computer and not self.board.turn:
@@ -31,6 +36,7 @@ class ChessGUI:
         self.canvas.delete("all")
         for row in range(8):
             for col in range(8):
+                square = chess.square(col, 7 - row)
                 x1 = col * SQUARE_SIZE
                 y1 = row * SQUARE_SIZE
                 x2 = x1 + SQUARE_SIZE
@@ -39,7 +45,10 @@ class ChessGUI:
                 color = "#EEE" if (row + col) % 2 == 0 else "#999"
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
 
-                square = chess.square(col, 7 - row)
+                # Highlight selected square
+                if self.selected_square == square:
+                    self.canvas.create_rectangle(x1, y1, x2, y2, outline="yellow", width=4)
+
                 piece = self.board.piece_at(square)
                 if piece:
                     symbol = UNICODE_PIECES[piece.symbol()]
@@ -49,6 +58,8 @@ class ChessGUI:
                         text=symbol,
                         font=("Arial", 28)
                     )
+
+        self.turn_label.config(text="White's turn" if self.board.turn else "Black's turn")
 
     def on_click(self, event):
         if self.board.is_game_over() or (self.vs_computer and not self.board.turn):
@@ -76,6 +87,8 @@ class ChessGUI:
             else:
                 self.selected_square = None
 
+        self.draw_board()
+
     def computer_move(self):
         if not self.board.is_game_over():
             move = random.choice(list(self.board.legal_moves))
@@ -90,9 +103,16 @@ class ChessGUI:
         self.root.destroy()
 
 def run_chess():
-    root = tk.Toplevel()
-    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?")
-    ChessGUI(root, vs_computer)
+    game_window = tk.Toplevel()
+    game_window.title("Chess")
+    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?", parent=game_window)
+    
+    ChessGUI(game_window, vs_computer)
+
+    # Bring game window to front
+    game_window.lift()
+    game_window.focus_force()
+    game_window.grab_set()
 
 if __name__ == "__main__":
     run_chess()
