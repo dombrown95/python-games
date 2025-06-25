@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
+import random
 
 def run_tic_tac_toe():
     window = tk.Toplevel()
     window.title("Tic Tac Toe")
 
+    is_vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?")
     board = [""] * 9
     turn = ["X"]
 
@@ -19,6 +21,12 @@ def run_tic_tac_toe():
             return "Draw"
         return None
 
+    def computer_move():
+        empty = [i for i, val in enumerate(board) if val == ""]
+        if empty:
+            move = random.choice(empty)
+            make_move(move)
+
     def make_move(i):
         if board[i] == "":
             board[i] = turn[0]
@@ -30,7 +38,10 @@ def run_tic_tac_toe():
                 else:
                     messagebox.showinfo("Tic Tac Toe", f"{winner} wins!")
                 window.destroy()
-            turn[0] = "O" if turn[0] == "X" else "X"
+            else:
+                turn[0] = "O" if turn[0] == "X" else "X"
+                if is_vs_computer and turn[0] == "O":
+                    window.after(500, computer_move)
 
     buttons = []
     for i in range(9):
@@ -39,5 +50,5 @@ def run_tic_tac_toe():
         b.grid(row=i//3, column=i%3)
         buttons.append(b)
 
-if __name__ == "__main__":
-    run_tic_tac_toe()
+    if is_vs_computer and turn[0] == "O":
+        window.after(500, computer_move)

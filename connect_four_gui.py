@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import random
 
 ROWS = 6
 COLUMNS = 7
@@ -11,7 +12,8 @@ def run_connect_four():
         def __init__(self, root):
             self.root = root
             self.root.title("Connect Four")
-            self.current_player = 0  # 0 = Red, 1 = Yellow
+            self.vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?")
+            self.current_player = 0
             self.board = [["" for _ in range(COLUMNS)] for _ in range(ROWS)]
 
             self.canvas = tk.Canvas(root, width=COLUMNS * CELL_SIZE, height=ROWS * CELL_SIZE, bg="blue")
@@ -28,30 +30,42 @@ def run_connect_four():
                     y1 = row * CELL_SIZE + 5
                     x2 = x1 + CELL_SIZE - 10
                     y2 = y1 + CELL_SIZE - 10
-                    piece = self.board[row][col]
-                    fill = piece if piece else "white"
+                    fill = self.board[row][col] if self.board[row][col] else "white"
                     self.canvas.create_oval(x1, y1, x2, y2, fill=fill, outline="black")
 
         def on_click(self, event):
             col = event.x // CELL_SIZE
-            if col < 0 or col >= COLUMNS:
-                return
+            self.player_move(col)
 
+        def player_move(self, col):
+            if self.make_move(col):
+                if self.vs_computer and self.current_player == 1:
+                    self.root.after(500, self.computer_move)
+
+        def computer_move(self):
+            legal_cols = [c for c in range(COLUMNS) if self.board[0][c] == ""]
+            if legal_cols:
+                col = random.choice(legal_cols)
+                self.make_move(col)
+
+        def make_move(self, col):
             for row in reversed(range(ROWS)):
                 if self.board[row][col] == "":
                     self.board[row][col] = PLAYER_COLORS[self.current_player]
                     self.draw_board()
 
                     if self.check_winner(row, col):
-                        color = PLAYER_COLORS[self.current_player].capitalize()
-                        messagebox.showinfo("Game Over", f"{color} wins!")
+                        messagebox.showinfo("Game Over", f"{PLAYER_COLORS[self.current_player].capitalize()} wins!")
                         self.root.destroy()
+                        return False
                     elif all(self.board[r][c] != "" for r in range(ROWS) for c in range(COLUMNS)):
                         messagebox.showinfo("Game Over", "It's a draw!")
                         self.root.destroy()
-                    else:
-                        self.current_player = 1 - self.current_player
-                    break
+                        return False
+
+                    self.current_player = 1 - self.current_player
+                    return True
+            return False
 
         def check_winner(self, row, col):
             color = self.board[row][col]
@@ -75,6 +89,3 @@ def run_connect_four():
 
     window = tk.Toplevel()
     ConnectFour(window)
-
-if __name__ == "__main__":
-    run_connect_four()

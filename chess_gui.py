@@ -1,27 +1,31 @@
 import tkinter as tk
 import chess
 from tkinter import messagebox
+import random
 
 SQUARE_SIZE = 60
 BOARD_SIZE = SQUARE_SIZE * 8
 
-# Unicode piece symbols
 UNICODE_PIECES = {
     "r": "♜", "n": "♞", "b": "♝", "q": "♛", "k": "♚", "p": "♟",
     "R": "♖", "N": "♘", "B": "♗", "Q": "♕", "K": "♔", "P": "♙"
 }
 
 class ChessGUI:
-    def __init__(self, root):
+    def __init__(self, root, vs_computer=False):
         self.root = root
         self.root.title("Chess")
         self.board = chess.Board()
         self.selected_square = None
+        self.vs_computer = vs_computer
 
         self.canvas = tk.Canvas(root, width=BOARD_SIZE, height=BOARD_SIZE)
         self.canvas.pack()
         self.canvas.bind("<Button-1>", self.on_click)
         self.draw_board()
+
+        if self.vs_computer and not self.board.turn:
+            self.root.after(500, self.computer_move)
 
     def draw_board(self):
         self.canvas.delete("all")
@@ -33,7 +37,7 @@ class ChessGUI:
                 y2 = y1 + SQUARE_SIZE
 
                 color = "#EEE" if (row + col) % 2 == 0 else "#999"
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color)
 
                 square = chess.square(col, 7 - row)
                 piece = self.board.piece_at(square)
@@ -47,6 +51,9 @@ class ChessGUI:
                     )
 
     def on_click(self, event):
+        if self.board.is_game_over() or (self.vs_computer and not self.board.turn):
+            return
+
         col = event.x // SQUARE_SIZE
         row = event.y // SQUARE_SIZE
         square = chess.square(col, 7 - row)
@@ -62,14 +69,30 @@ class ChessGUI:
                 self.selected_square = None
                 self.draw_board()
                 if self.board.is_game_over():
-                    messagebox.showinfo("Game Over", f"Result: {self.board.result()}")
-                    self.root.destroy()
+                    self.end_game()
+                    return
+                if self.vs_computer:
+                    self.root.after(500, self.computer_move)
             else:
-                self.selected_square = None  # Reset on invalid move
+                self.selected_square = None
+
+    def computer_move(self):
+        if not self.board.is_game_over():
+            move = random.choice(list(self.board.legal_moves))
+            self.board.push(move)
+            self.draw_board()
+            if self.board.is_game_over():
+                self.end_game()
+
+    def end_game(self):
+        result = self.board.result()
+        messagebox.showinfo("Game Over", f"Result: {result}")
+        self.root.destroy()
 
 def run_chess():
-    chess_window = tk.Toplevel()
-    ChessGUI(chess_window)
+    root = tk.Toplevel()
+    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?")
+    ChessGUI(root, vs_computer)
 
 if __name__ == "__main__":
     run_chess()

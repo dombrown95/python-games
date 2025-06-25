@@ -1,39 +1,74 @@
 import tkinter as tk
 import random
+from PIL import Image, ImageTk
+from tkinter import simpledialog, messagebox
 
 def run_rps():
-    wins = losses = ties = 0
-
     window = tk.Toplevel()
     window.title("Rock Paper Scissors")
+
+    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?")
+
+    wins = losses = ties = 0
+    choices = ['rock', 'paper', 'scissors']
+
+    images = {
+        c: ImageTk.PhotoImage(Image.open(f"{c}.png").resize((100, 100)))
+        for c in choices
+    }
+
+    canvas = tk.Canvas(window, width=300, height=140)
+    canvas.grid(row=0, column=0, columnspan=3, pady=10)
+
+    # Shift image down slightly to make room for labels above
+    user_sprite = canvas.create_image(50, 80, image=images['rock'])
+    comp_sprite = canvas.create_image(250, 80, image=images['rock'])
+
+    # Position text labels higher (above the image)
+    canvas.create_text(50, 25, text="You", font=("Arial", 10))
+    canvas.create_text(250, 25, text="Computer", font=("Arial", 10))
 
     output = tk.StringVar()
     stats = tk.StringVar(value="Wins: 0  Losses: 0  Ties: 0")
 
-    def play(player):
-        nonlocal wins, losses, ties
-        comp = random.choice(['Rock', 'Paper', 'Scissors'])
+    tk.Label(window, textvariable=output, font=("Arial", 12)).grid(row=1, column=0, columnspan=3, pady=5)
+    tk.Label(window, textvariable=stats).grid(row=2, column=0, columnspan=3)
 
-        if player == comp:
+    def play(player_choice):
+        nonlocal wins, losses, ties
+
+        if vs_computer:
+            comp_choice = random.choice(choices)
+        else:
+            comp_choice = simpledialog.askstring("Player 2", "Enter move: rock, paper, or scissors")
+            if comp_choice not in choices:
+                messagebox.showerror("Invalid", "Move must be rock, paper, or scissors")
+                return
+
+        canvas.itemconfig(user_sprite, image=images[player_choice])
+        canvas.itemconfig(comp_sprite, image=images[comp_choice])
+
+        if player_choice == comp_choice:
             ties += 1
             result = "It's a tie!"
-        elif (player == 'Rock' and comp == 'Scissors') or \
-             (player == 'Paper' and comp == 'Rock') or \
-             (player == 'Scissors' and comp == 'Paper'):
+        elif (player_choice == 'rock' and comp_choice == 'scissors') or \
+             (player_choice == 'paper' and comp_choice == 'rock') or \
+             (player_choice == 'scissors' and comp_choice == 'paper'):
             wins += 1
             result = "You win!"
         else:
             losses += 1
-            result = "You lose!"
+            result = "You lose!" if vs_computer else "Player 2 wins!"
 
         stats.set(f"Wins: {wins}  Losses: {losses}  Ties: {ties}")
-        output.set(f"You chose {player}, Computer chose {comp}. {result}")
+        output.set(f"You chose {player_choice}, opponent chose {comp_choice}. {result}")
 
-    tk.Label(window, textvariable=output, font=("Arial", 12), wraplength=300).pack(pady=10)
-    tk.Label(window, textvariable=stats).pack(pady=5)
+    btn_frame = tk.Frame(window)
+    btn_frame.grid(row=3, column=0, columnspan=3, pady=10)
 
-    for move in ["Rock", "Paper", "Scissors"]:
-        tk.Button(window, text=move, width=15, command=lambda m=move: play(m)).pack(pady=3)
+    for choice in choices:
+        tk.Button(btn_frame, text=choice.capitalize(), width=12,
+                  command=lambda c=choice: play(c)).pack(side="left", padx=8)
 
 if __name__ == "__main__":
     run_rps()
