@@ -15,6 +15,7 @@ def run_tic_tac_toe():
     turn = ["X"]
     game_over = [False]
     result_text = tk.StringVar()
+    turn_text = tk.StringVar(value="Turn: X")
 
     def check_winner():
         wins = [
@@ -46,9 +47,12 @@ def run_tic_tac_toe():
                     result_text.set("It's a draw!")
                 else:
                     result_text.set(f"{winner} wins!")
-                restart_button.grid()  # Show restart button
+                turn_text.set("")
+                restart_button.grid()
                 return
+            # Switch turn
             turn[0] = "O" if turn[0] == "X" else "X"
+            turn_text.set(f"Turn: {turn[0]}")
             if is_vs_computer and turn[0] == "O":
                 game_window.after(500, computer_move)
 
@@ -59,10 +63,12 @@ def run_tic_tac_toe():
         turn[0] = "X"
         game_over[0] = False
         result_text.set("")
+        turn_text.set("Turn: X")
         restart_button.grid_remove()
         if is_vs_computer and turn[0] == "O":
             game_window.after(500, computer_move)
 
+    # UI Layout
     buttons = []
     for i in range(9):
         b = tk.Button(
@@ -72,11 +78,12 @@ def run_tic_tac_toe():
         b.grid(row=i // 3, column=i % 3)
         buttons.append(b)
 
-    tk.Label(game_window, textvariable=result_text, font=("Arial", 14)).grid(row=3, column=0, columnspan=3, pady=10)
+    tk.Label(game_window, textvariable=turn_text, font=("Arial", 12)).grid(row=3, column=0, columnspan=3, pady=(10, 0))
+    tk.Label(game_window, textvariable=result_text, font=("Arial", 14)).grid(row=4, column=0, columnspan=3, pady=(5, 0))
 
     restart_button = tk.Button(game_window, text="Play Again", font=("Arial", 12), command=restart_game)
-    restart_button.grid(row=4, column=0, columnspan=3, pady=5)
-    restart_button.grid_remove()  # Hide initially
+    restart_button.grid(row=5, column=0, columnspan=3, pady=10)
+    restart_button.grid_remove()
 
     if is_vs_computer and turn[0] == "O":
         game_window.after(500, computer_move)
