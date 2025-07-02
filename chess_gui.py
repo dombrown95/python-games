@@ -1,6 +1,6 @@
 import tkinter as tk
 import chess
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox
 import random
 
 SQUARE_SIZE = 60
@@ -139,6 +139,24 @@ class ChessGUI:
         messagebox.showinfo("Game Over", f"Result: {result}")
         self.root.destroy()
 
+def ask_difficulty(parent_window, callback):
+    dialog = tk.Toplevel(parent_window)
+    dialog.title("Select Difficulty")
+    dialog.geometry("250x150")
+    dialog.grab_set()
+    dialog.lift()
+    dialog.focus_force()
+
+    tk.Label(dialog, text="Choose difficulty:", font=("Arial", 12)).pack(pady=10)
+
+    def select_level(level):
+        dialog.destroy()
+        callback(level)
+
+    tk.Button(dialog, text="Easy", width=15, command=lambda: select_level("easy")).pack(pady=5)
+    tk.Button(dialog, text="Medium", width=15, command=lambda: select_level("medium")).pack(pady=5)
+    tk.Button(dialog, text="Hard", width=15, command=lambda: select_level("hard")).pack(pady=5)
+
 def run_chess():
     game_window = tk.Toplevel()
     game_window.title("Chess")
@@ -146,16 +164,14 @@ def run_chess():
     game_window.focus_force()
     game_window.grab_set()
 
-    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?", parent=game_window)
-    difficulty = "easy"
-    if vs_computer:
-        difficulty = simpledialog.askstring(
-            "Difficulty", "Choose difficulty: easy, medium, or hard", parent=game_window
-        )
-        if not difficulty or difficulty.lower() not in ["easy", "medium", "hard"]:
-            difficulty = "easy"
+    def launch_game_with_difficulty(difficulty):
+        ChessGUI(game_window, vs_computer=True, difficulty=difficulty)
 
-    ChessGUI(game_window, vs_computer, difficulty.lower())
+    vs_computer = messagebox.askyesno("Game Mode", "Play against the computer?", parent=game_window)
+    if vs_computer:
+        ask_difficulty(game_window, launch_game_with_difficulty)
+    else:
+        ChessGUI(game_window, vs_computer=False)
 
 if __name__ == "__main__":
     run_chess()
