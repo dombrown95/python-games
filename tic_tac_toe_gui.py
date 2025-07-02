@@ -1,6 +1,6 @@
 import tkinter as tk
-from tkinter import messagebox
 import random
+from tkinter import messagebox
 
 def run_tic_tac_toe():
     game_window = tk.Toplevel()
@@ -13,6 +13,8 @@ def run_tic_tac_toe():
 
     board = [""] * 9
     turn = ["X"]
+    game_over = [False]
+    result_text = tk.StringVar()
 
     def check_winner():
         wins = [
@@ -34,20 +36,32 @@ def run_tic_tac_toe():
             make_move(move)
 
     def make_move(i):
-        if board[i] == "":
+        if board[i] == "" and not game_over[0]:
             board[i] = turn[0]
             buttons[i].config(text=turn[0], state="disabled")
             winner = check_winner()
             if winner:
+                game_over[0] = True
                 if winner == "Draw":
-                    messagebox.showinfo("Tic Tac Toe", "It's a draw!")
+                    result_text.set("It's a draw!")
                 else:
-                    messagebox.showinfo("Tic Tac Toe", f"{winner} wins!")
-                game_window.destroy()
-            else:
-                turn[0] = "O" if turn[0] == "X" else "X"
-                if is_vs_computer and turn[0] == "O":
-                    game_window.after(500, computer_move)
+                    result_text.set(f"{winner} wins!")
+                restart_button.grid()  # Show restart button
+                return
+            turn[0] = "O" if turn[0] == "X" else "X"
+            if is_vs_computer and turn[0] == "O":
+                game_window.after(500, computer_move)
+
+    def restart_game():
+        for i in range(9):
+            board[i] = ""
+            buttons[i].config(text="", state="normal")
+        turn[0] = "X"
+        game_over[0] = False
+        result_text.set("")
+        restart_button.grid_remove()
+        if is_vs_computer and turn[0] == "O":
+            game_window.after(500, computer_move)
 
     buttons = []
     for i in range(9):
@@ -57,6 +71,12 @@ def run_tic_tac_toe():
         )
         b.grid(row=i // 3, column=i % 3)
         buttons.append(b)
+
+    tk.Label(game_window, textvariable=result_text, font=("Arial", 14)).grid(row=3, column=0, columnspan=3, pady=10)
+
+    restart_button = tk.Button(game_window, text="Play Again", font=("Arial", 12), command=restart_game)
+    restart_button.grid(row=4, column=0, columnspan=3, pady=5)
+    restart_button.grid_remove()  # Hide initially
 
     if is_vs_computer and turn[0] == "O":
         game_window.after(500, computer_move)
